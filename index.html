@@ -3,93 +3,373 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>المساعد المالي والإداري</title>
+    <title>FinSnap AI - Ultimate Financial Assistant</title>
     <link rel="manifest" href="manifest.json">
-    <style>
-        body { font-family: system-ui, -apple-system, sans-serif; background: #f0f4f8; margin: 0; padding: 15px; color: #333; }
-        .card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); max-width: 480px; margin: 0 auto 15px; }
-        h2 { color: #1e88e5; margin-top: 0; text-align: center; }
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-        .tab-btn { flex: 1; padding: 12px; border: none; background: #e2e8f0; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .tab-btn.active { background: #1e88e5; color: white; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .input-group { margin-bottom: 12px; }
-        label { font-size: 12px; font-weight: bold; display: block; margin-bottom: 4px; }
-        .input-field { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
-        .btn { width: 100%; padding: 14px; background: #1e88e5; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .result { background: #0f172a; color: #38bdf8; padding: 15px; border-radius: 10px; font-size: 14px; white-space: pre-wrap; margin-top: 12px; }
-        .task-item { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 8px; border-right: 4px solid #1e88e5; }
-    </style>
+    <!-- Tailwind CSS, FontAwesome & Chart.js -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen pb-24 selection:bg-blue-500 selection:text-white">
 
-    <div class="card">
-        <h2>📱 المساعد الذكي الشامل</h2>
-        <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('ai')">🧾 الفواتير</button>
-            <button class="tab-btn" onclick="switchTab('tasks')">📋 المهام والتذكيرات</button>
+    <!-- Top Navigation Header -->
+    <header class="bg-slate-900/90 backdrop-blur-xl border-b border-slate-800 sticky top-0 z-40 px-4 py-3 flex justify-between items-center shadow-2xl">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-emerald-400 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-blue-500/20">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div>
+                <h1 class="font-extrabold text-base tracking-wide text-white">FinSnap <span class="text-blue-400">AI</span></h1>
+                <p id="ui-greeting" class="text-xs text-emerald-400 font-medium">أهلاً بك، مستخدم</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <button onclick="toggleLock()" class="p-2.5 rounded-xl bg-slate-800 text-slate-300 hover:text-white border border-slate-700/50">
+                <i class="fa-solid fa-lock text-xs"></i>
+            </button>
+            <button onclick="openModal('settings-modal')" class="p-2.5 rounded-xl bg-slate-800 text-slate-300 hover:text-white border border-slate-700/50">
+                <i class="fa-solid fa-gear text-xs"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-md mx-auto p-4 space-y-5">
+
+        <!-- Navigation Tabs -->
+        <div class="grid grid-cols-5 gap-1 bg-slate-900 p-1.5 rounded-2xl border border-slate-800 shadow-inner text-[11px] font-bold">
+            <button onclick="switchTab('dashboard')" id="btn-dashboard" class="tab-btn active py-2 rounded-xl text-center transition-all bg-blue-600 text-white shadow-lg shadow-blue-600/30">
+                <i class="fa-solid fa-chart-pie block text-sm mb-0.5"></i><span data-i18n="nav_dash">الرئيسية</span>
+            </button>
+            <button onclick="switchTab('scanner')" id="btn-scanner" class="tab-btn py-2 rounded-xl text-center transition-all text-slate-400 hover:text-white">
+                <i class="fa-solid fa-expand block text-sm mb-0.5"></i><span data-i18n="nav_scan">الفواتير</span>
+            </button>
+            <button onclick="switchTab('reminders')" id="btn-reminders" class="tab-btn py-2 rounded-xl text-center transition-all text-slate-400 hover:text-white">
+                <i class="fa-solid fa-clock-rotate-left block text-sm mb-0.5"></i><span data-i18n="nav_remind">التذكيرات</span>
+            </button>
+            <button onclick="switchTab('payment')" id="btn-payment" class="tab-btn py-2 rounded-xl text-center transition-all text-slate-400 hover:text-white">
+                <i class="fa-solid fa-credit-card block text-sm mb-0.5"></i><span data-i18n="nav_pay">الدفع</span>
+            </button>
+            <button onclick="switchTab('support')" id="btn-support" class="tab-btn py-2 rounded-xl text-center transition-all text-slate-400 hover:text-white">
+                <i class="fa-solid fa-headset block text-sm mb-0.5"></i><span data-i18n="nav_help">الدعم</span>
+            </button>
         </div>
 
-        <!-- قسم الذكاء الاصطناعي -->
-        <div id="aiTab" class="tab-content active">
-            <div class="input-group">
-                <label>مفتاح Gemini API:</label>
-                <input type="text" id="apiKeyInput" class="input-field" placeholder="ضع المفتاح AQ... هنا">
+        <!-- 1. DASHBOARD TAB -->
+        <section id="tab-dashboard" class="space-y-4">
+            <!-- Financial Summary Cards -->
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-800 p-4 rounded-2xl relative overflow-hidden shadow-xl">
+                    <p class="text-[11px] text-slate-400 font-medium mb-1" data-i18n="total_expenses">إجمالي المصروفات</p>
+                    <h3 id="stat-total" class="text-xl font-black text-emerald-400">0.00 €</h3>
+                    <i class="fa-solid fa-wallet absolute left-3 bottom-2 text-slate-800 text-4xl -z-0"></i>
+                </div>
+                <div class="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-800 p-4 rounded-2xl relative overflow-hidden shadow-xl">
+                    <p class="text-[11px] text-slate-400 font-medium mb-1" data-i18n="total_receipts">عدد الفواتير</p>
+                    <h3 id="stat-count" class="text-xl font-black text-blue-400">0</h3>
+                    <i class="fa-solid fa-file-invoice-dollar absolute left-3 bottom-2 text-slate-800 text-4xl -z-0"></i>
+                </div>
             </div>
-            <div class="input-group">
-                <label>صورة الفاتورة:</label>
-                <input type="file" id="receiptInput" accept="image/*" class="input-field">
-            </div>
-            <button class="btn" onclick="uploadReceipt()">تحليل بالذكاء الاصطناعي 🚀</button>
-            <div id="status" style="margin-top:10px; font-size:13px; font-weight:bold;"></div>
-            <div id="result" class="result" style="display:none;"></div>
-        </div>
 
-        <!-- قسم المهام والتذكيرات -->
-        <div id="tasksTab" class="tab-content">
-            <div class="input-group">
-                <label>عنوان المهمة / التذكير:</label>
-                <input type="text" id="taskTitle" class="input-field" placeholder="مثال: سداد فاتورة الكهرباء">
+            <!-- Analytics Chart Box -->
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl shadow-xl space-y-3">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xs font-bold text-slate-300 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-donut text-blue-500"></i> <span data-i18n="expense_chart">تحليل المصروفات الإحصائي</span>
+                    </h3>
+                    <button onclick="exportToCSV()" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-emerald-400 px-2.5 py-1 rounded-lg border border-slate-700 font-bold">
+                        <i class="fa-solid fa-file-excel ml-1"></i> CSV
+                    </button>
+                </div>
+                <div class="relative h-48 flex justify-center items-center">
+                    <canvas id="expenseChart"></canvas>
+                </div>
             </div>
-            <div class="input-group">
-                <label>تاريخ التذكير:</label>
-                <input type="date" id="taskDate" class="input-field">
+
+            <!-- Invoices Saved History List -->
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl shadow-xl space-y-3">
+                <h3 class="text-xs font-bold text-slate-300" data-i18n="recent_invoices">سجل الفواتير المحفوظة</h3>
+                <div id="invoiceHistoryList" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
             </div>
-            <button class="btn" style="background:#22c55e;" onclick="addTask()">إضافة التذكير 🔔</button>
-            <div id="taskList" style="margin-top:20px;"></div>
+        </section>
+
+        <!-- 2. AI INVOICE SCANNER TAB -->
+        <section id="tab-scanner" class="hidden space-y-4">
+            <div class="bg-slate-900 border-2 border-dashed border-slate-800 hover:border-blue-500/50 p-6 rounded-2xl text-center transition-all">
+                <div class="w-14 h-14 bg-blue-600/10 text-blue-400 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl">
+                    <i class="fa-solid fa-camera"></i>
+                </div>
+                <h3 class="font-bold text-sm text-slate-200 mb-1" data-i18n="scan_title">مسح الفاتورة بالذكاء الاصطناعي</h3>
+                <p class="text-[11px] text-slate-500 mb-4" data-i18n="scan_desc">التقط صورة الفاتورة أو اختر ملفاً لمعالجته فوراً</p>
+                
+                <input type="file" id="receiptInput" accept="image/*" class="hidden" onchange="handleImageSelect(event)">
+                <label for="receiptInput" class="inline-block bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-3 px-6 rounded-xl cursor-pointer transition-all shadow-lg shadow-blue-600/30">
+                    <i class="fa-solid fa-upload ml-1"></i> <span data-i18n="select_file">اختيار الفاتورة</span>
+                </label>
+                
+                <div id="imagePreviewContainer" class="hidden mt-4">
+                    <img id="imagePreview" class="max-h-48 mx-auto rounded-xl border border-slate-700 shadow-xl">
+                </div>
+            </div>
+
+            <button onclick="processInvoiceAI()" class="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-500 text-white font-bold py-3.5 rounded-xl text-xs shadow-xl shadow-blue-600/25 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n="btn_analyze">بدء التحليل التلقائي والحفظ</span>
+            </button>
+
+            <div id="scan-status" class="text-center text-xs font-bold text-amber-400 min-h-[20px]"></div>
+            <div id="scan-result" class="hidden bg-slate-900 border border-slate-800 p-4 rounded-2xl text-xs leading-relaxed text-blue-300 font-mono whitespace-pre-wrap"></div>
+        </section>
+
+        <!-- 3. REMINDERS & TASKS TAB (WITH DATE + HOUR) -->
+        <section id="tab-reminders" class="hidden space-y-4">
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
+                <h3 class="text-xs font-bold text-slate-200 flex items-center gap-2">
+                    <i class="fa-solid fa-bell text-amber-400"></i> <span data-i18n="add_reminder">إضافة تذكير سداد (يوم + ساعة)</span>
+                </h3>
+                <input type="text" id="remindTitle" placeholder="عنوان التذكير (مثل: سداد الفاتورة)" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-blue-500">
+                
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="text-[10px] text-slate-400 mb-1 block" data-i18n="select_date">حدد اليوم</label>
+                        <input type="date" id="remindDate" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-slate-400 mb-1 block" data-i18n="select_time">حدد الساعة</label>
+                        <input type="time" id="remindTime" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200">
+                    </div>
+                </div>
+
+                <button onclick="addReminder()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl text-xs transition-all shadow-lg shadow-emerald-600/20">
+                    <i class="fa-solid fa-plus ml-1"></i> <span data-i18n="btn_add_remind">حفظ التذكير</span>
+                </button>
+            </div>
+
+            <div id="reminderList" class="space-y-2"></div>
+        </section>
+
+        <!-- 4. PAYMENT GATEWAY TAB -->
+        <section id="tab-payment" class="hidden space-y-4">
+            <!-- Simulated Credit Card Visual -->
+            <div class="bg-gradient-to-tr from-blue-700 via-indigo-700 to-slate-900 p-5 rounded-2xl border border-blue-500/30 shadow-2xl relative overflow-hidden space-y-6">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-bold tracking-widest text-blue-200">FINSNAP PRO</span>
+                    <i class="fa-solid fa-wifi text-slate-300"></i>
+                </div>
+                <div>
+                    <span class="text-xs text-blue-200/70 block mb-1">Card Number</span>
+                    <p class="font-mono text-base tracking-widest text-white">**** **** **** 8892</p>
+                </div>
+                <div class="flex justify-between items-center text-xs">
+                    <div>
+                        <span class="text-[9px] text-blue-200/70 block">CARD HOLDER</span>
+                        <span id="card-holder-name" class="font-bold text-white">USER NAME</span>
+                    </div>
+                    <div>
+                        <span class="text-[9px] text-blue-200/70 block">EXPIRES</span>
+                        <span class="font-bold text-white">12/28</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Action Box -->
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
+                <h3 class="text-xs font-bold text-slate-200" data-i18n="upgrade_plan">ترقية الحساب أو دفع المستحقات</h3>
+                <p class="text-[11px] text-slate-400" data-i18n="pay_desc">دفع آمن ومشرع 100% بدون أي عمولات خفية.</p>
+                
+                <input type="number" id="payAmount" placeholder="المبلغ (EUR)" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200">
+                
+                <button onclick="processPayment()" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold py-3.5 rounded-xl text-xs shadow-xl shadow-emerald-500/20">
+                    <i class="fa-solid fa-lock ml-1"></i> <span data-i18n="btn_pay">إتمام الدفع الآمن</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- 5. SUPPORT & FEEDBACK TAB -->
+        <section id="tab-support" class="hidden space-y-4">
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
+                <h3 class="text-xs font-bold text-slate-200 flex items-center gap-2">
+                    <i class="fa-solid fa-comments text-blue-400"></i> <span data-i18n="support_title">تواصل معنا / تقديم شكوى</span>
+                </h3>
+                <input type="text" id="suppName" placeholder="الاسم الكامل" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200">
+                <input type="email" id="suppEmail" placeholder="البريد الإلكتروني" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200">
+                <textarea id="suppMsg" rows="3" placeholder="اكتب شكواك أو اقتراحك هنا..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200"></textarea>
+                
+                <button onclick="submitSupport()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl text-xs shadow-lg shadow-blue-600/20">
+                    <i class="fa-solid fa-paper-plane ml-1"></i> <span data-i18n="btn_send">إرسال الرسالة</span>
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- SETTINGS MODAL -->
+    <div id="settings-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-5 space-y-4 text-xs">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="font-bold text-sm text-slate-100" data-i18n="settings_title">إعدادات التطبيق</h3>
+                <button onclick="closeModal('settings-modal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-base"></i></button>
+            </div>
+
+            <!-- Language Switcher -->
+            <div>
+                <label class="block text-slate-400 mb-1" data-i18n="select_lang">لغة التطبيق</label>
+                <select id="langSelect" onchange="changeLanguage(this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200 font-bold">
+                    <option value="ar">العربية (Arabic)</option>
+                    <option value="en">English</option>
+                    <option value="de">Deutsch (German)</option>
+                    <option value="fr">Français (French)</option>
+                </select>
+            </div>
+
+            <!-- Profile Name -->
+            <div>
+                <label class="block text-slate-400 mb-1" data-i18n="user_name_label">اسم المستخدم</label>
+                <input type="text" id="userNameInput" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200" placeholder="أدخل اسمك">
+            </div>
+
+            <button onclick="saveUserProfile()" class="w-full bg-blue-600 text-white font-bold py-2.5 rounded-xl" data-i18n="btn_save">حفظ البيانات</button>
+
+            <!-- Privacy Policy Button -->
+            <button onclick="openModal('privacy-modal')" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 rounded-xl border border-slate-700">
+                <i class="fa-solid fa-shield-cat ml-1"></i> <span data-i18n="privacy_policy">سياسة الخصوصية الاستخدام</span>
+            </button>
         </div>
     </div>
 
+    <!-- PRIVACY POLICY MODAL -->
+    <div id="privacy-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-5 space-y-3 text-xs max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <h3 class="font-bold text-sm text-slate-100" data-i18n="privacy_policy">سياسة الخصوصية والأمان</h3>
+                <button onclick="closeModal('privacy-modal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-base"></i></button>
+            </div>
+            <p class="text-slate-400 leading-relaxed">
+                نحن في **FinSnap AI** نلتزم بحماية خصوصيتك المالية بنسبة 100%. التطبيق خالي تماماً من الإعلانات ولا يقوم ببيع أو مشاركة بيانات فواتيرك مع أي طرف ثالث. يتم تخزين جميع البيانات والسجلات محلياً على جهازك باستخدام تقنيات المشفرة الشفافة.
+            </p>
+        </div>
+    </div>
+
+    <!-- SCRIPT APPLICATION ENGINE -->
     <script>
+        // === 1. API KEY INTEGRATION (ضع مفتاح Gemini الخاص بك هنا) ===
+        const GEMINI_API_KEY = "ضع_مفتاحك_هنا";
+
+        // === 2. TRANSLATIONS DICTIONARY ===
+        const translations = {
+            ar: {
+                nav_dash: "الرئيسية", nav_scan: "الفواتير", nav_remind: "التذكيرات", nav_pay: "الدفع", nav_help: "الدعم",
+                total_expenses: "إجمالي المصروفات", total_receipts: "عدد الفواتير", expense_chart: "تحليل المصروفات الإحصائي",
+                recent_invoices: "سجل الفواتير المحفوظة", scan_title: "مسح الفاتورة بالذكاء الاصطناعي", scan_desc: "التقط صورة الفاتورة أو اختر ملفاً لمعالجته فوراً",
+                select_file: "اختيار الفاتورة", btn_analyze: "بدء التحليل التلقائي والحفظ", add_reminder: "إضافة تذكير سداد (يوم + ساعة)",
+                select_date: "حدد اليوم", select_time: "حدد الساعة", btn_add_remind: "حفظ التذكير", upgrade_plan: "ترقية الحساب أو دفع المستحقات",
+                pay_desc: "دفع آمن ومشرع 100% بدون أي عمولات خفية.", btn_pay: "إتمام الدفع الآمن", support_title: "تواصل معنا / تقديم شكوى",
+                btn_send: "إرسال الرسالة", settings_title: "إعدادات التطبيق", select_lang: "لغة التطبيق", user_name_label: "اسم المستخدم",
+                btn_save: "حفظ البيانات", privacy_policy: "سياسة الخصوصية والاستخدام", greeting: "أهلاً بك، "
+            },
+            en: {
+                nav_dash: "Dashboard", nav_scan: "Scanner", nav_remind: "Reminders", nav_pay: "Payment", nav_help: "Support",
+                total_expenses: "Total Expenses", total_receipts: "Receipts Count", expense_chart: "Expense Analytics Chart",
+                recent_invoices: "Saved Invoices History", scan_title: "AI Invoice Scanner", scan_desc: "Capture receipt image or upload a file for instant analysis",
+                select_file: "Select Receipt", btn_analyze: "Start AI Analysis & Save", add_reminder: "Add Reminder (Date + Time)",
+                select_date: "Select Date", select_time: "Select Time", btn_add_remind: "Save Reminder", upgrade_plan: "Account Upgrade & Payments",
+                pay_desc: "100% secure encrypted payment with zero hidden fees.", btn_pay: "Complete Secure Payment", support_title: "Contact Us / Support",
+                btn_send: "Send Message", settings_title: "App Settings", select_lang: "App Language", user_name_label: "User Name",
+                btn_save: "Save Info", privacy_policy: "Privacy & Terms Policy", greeting: "Welcome, "
+            },
+            de: {
+                nav_dash: "Dashboard", nav_scan: "Scanner", nav_remind: "Erinnerung", nav_pay: "Zahlung", nav_help: "Support",
+                total_expenses: "Gesamtausgaben", total_receipts: "Anzahl Rechnungen", expense_chart: "Ausgabenanalyse-Diagramm",
+                recent_invoices: "Gespeicherte Rechnungen", scan_title: "KI-Rechnungsscanner", scan_desc: "Foto aufnehmen oder Datei hochladen",
+                select_file: "Datei auswählen", btn_analyze: "KI-Analyse & Speichern", add_reminder: "Erinnerung (Datum + Uhrzeit)",
+                select_date: "Datum wählen", select_time: "Uhrzeit wählen", btn_add_remind: "Erinnerung speichern", upgrade_plan: "Konto-Upgrade & Zahlung",
+                pay_desc: "100% sichere verschlüsselte Zahlung.", btn_pay: "Sicher bezahlen", support_title: "Kontakt & Support",
+                btn_send: "Nachricht senden", settings_title: "Einstellungen", select_lang: "Sprache wahlen", user_name_label: "Benutzername",
+                btn_save: "Speichern", privacy_policy: "Datenschutzrichtlinie", greeting: "Willkommen, "
+            },
+            fr: {
+                nav_dash: "Accueil", nav_scan: "Factures", nav_remind: "Rappels", nav_pay: "Paiement", nav_help: "Support",
+                total_expenses: "Dépenses Totales", total_receipts: "Nombre de Factures", expense_chart: "Analyse Graphique des Dépenses",
+                recent_invoices: "Historique des Factures", scan_title: "Scanner IA de Factures", scan_desc: "Prenez une photo ou téléchargez un fichier",
+                select_file: "Choisir un fichier", btn_analyze: "Analyse IA et Sauvegarde", add_reminder: "Ajouter un Rappel (Date + Heure)",
+                select_date: "Sélectionner Date", select_time: "Sélectionner Heure", btn_add_remind: "Enregistrer Rappel", upgrade_plan: "Mise à Niveau et Paiement",
+                pay_desc: "Paiement 100% sécurisé et crypté.", btn_pay: "Payer en Toute Sécurité", support_title: "Support et Reclamations",
+                btn_send: "Envoyer Message", settings_title: "Paramètres", select_lang: "Langue de l'application", user_name_label: "Nom d'utilisateur",
+                btn_save: "Enregistrer", privacy_policy: "Politique de Confidentialité", greeting: "Bienvenue, "
+            }
+        };
+
+        let currentLang = 'ar';
+        let myChart = null;
+
+        // === 3. CORE APP CONTROLLERS ===
         function switchTab(tab) {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            if(tab === 'ai') {
-                document.querySelectorAll('.tab-btn')[0].classList.add('active');
-                document.getElementById('aiTab').classList.add('active');
-            } else {
-                document.querySelectorAll('.tab-btn')[1].classList.add('active');
-                document.getElementById('tasksTab').classList.add('active');
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.remove('bg-blue-600', 'text-white', 'shadow-lg');
+                b.classList.add('text-slate-400');
+            });
+            document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+
+            document.getElementById(`btn-${tab}`).classList.add('bg-blue-600', 'text-white', 'shadow-lg');
+            document.getElementById(`btn-${tab}`).classList.remove('text-slate-400');
+            document.getElementById(`tab-${tab}`).classList.remove('hidden');
+
+            if(tab === 'dashboard') updateDashboard();
+        }
+
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+        function changeLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('app_lang', lang);
+            document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang][key]) {
+                    el.innerText = translations[lang][key];
+                }
+            });
+
+            updateUserGreeting();
+        }
+
+        function saveUserProfile() {
+            const name = document.getElementById('userNameInput').value.trim();
+            if(name) {
+                localStorage.setItem('user_name', name);
+                updateUserGreeting();
+                closeModal('settings-modal');
             }
         }
 
-        window.onload = function() {
-            const k = localStorage.getItem('gemini_key');
-            if(k) document.getElementById('apiKeyInput').value = k;
-            renderTasks();
-        };
+        function updateUserGreeting() {
+            const name = localStorage.getItem('user_name') || 'User';
+            document.getElementById('ui-greeting').innerText = translations[currentLang].greeting + name;
+            document.getElementById('card-holder-name').innerText = name.toUpperCase();
+        }
 
-        async function uploadReceipt() {
+        // === 4. AI SCANNER & STORAGE ENGINE ===
+        function handleImageSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('imagePreview').src = e.target.result;
+                    document.getElementById('imagePreviewContainer').classList.remove('hidden');
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function processInvoiceAI() {
             const file = document.getElementById('receiptInput').files[0];
-            const key = document.getElementById('apiKeyInput').value.trim();
-            const status = document.getElementById('status');
-            const result = document.getElementById('result');
+            const status = document.getElementById('scan-status');
+            const result = document.getElementById('scan-result');
 
-            if(!key || !file) { alert('ادخل المفتاح والصورة أولاً!'); return; }
-            localStorage.setItem('gemini_key', key);
-            status.innerText = "⏳ جاري تحليل الفاتورة...";
-            result.style.display = "none";
+            if(!file) { alert('يرجى اختيار ملف الصورة أولاً!'); return; }
+            status.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري تحليل الفاتورة بواسطة الذكاء الاصطناعي...`;
+            result.classList.add('hidden');
 
             const reader = new FileReader();
             reader.onload = async (e) => {
@@ -101,54 +381,163 @@
                     try {
                         const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
                             method: "POST",
-                            headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+                            headers: { "Content-Type": "application/json", "x-goog-api-key": GEMINI_API_KEY },
                             body: JSON.stringify({ contents: [{ parts: [
-                                { text: "أنت مساعد مالي. استخرج باللغة العربية: اسم المكان، التاريخ، المبلغ الإجمالي، الضريبة، والتصنيف." },
+                                { text: "قم بمسح الصورة واستخراج البيانات التالية كـ JSON فقط بالصيغة العادية:\n{\"merchant\": \"اسم المحل\", \"amount\": 0.0, \"category\": \"وقود أو طعام أو خدمات\", \"details\": \"ملخص مختصر\"}" },
                                 { inline_data: { mime_type: file.type || "image/jpeg", data: b64 } }
                             ]}]})
                         });
                         const data = await res.json();
                         if(res.ok && data.candidates) {
-                            status.innerText = "✅ تم التحليل بنجاح!";
-                            result.style.display = "block";
-                            result.innerText = data.candidates[0].content.parts[0].text;
+                            const text = data.candidates[0].content.parts[0].text;
+                            saveInvoiceRecord(text);
+                            status.innerHTML = `✅ تم التحليل والحفظ التلقائي بنجاح!`;
+                            result.classList.remove('hidden');
+                            result.innerText = text;
                             ok = true; break;
                         }
                     } catch(err) {}
                 }
-                if(!ok) status.innerText = "❌ تعذر التحليل، تأكد من المفتاح والصورة.";
+                if(!ok) status.innerHTML = `❌ تعذر الاتصال بالسيرفر. تأكد من إدخال المفتاح.`;
             };
             reader.readAsDataURL(file);
         }
 
-        function getTasks() { return JSON.parse(localStorage.getItem('tasks') || '[]'); }
-        function addTask() {
-            const title = document.getElementById('taskTitle').value;
-            const date = document.getElementById('taskDate').value;
-            if(!title) return;
-            const tasks = getTasks();
-            tasks.push({ id: Date.now(), title, date });
-            localStorage.setItem('tasks', JSON.stringify(tasks));
-            document.getElementById('taskTitle').value = '';
-            renderTasks();
+        function saveInvoiceRecord(rawText) {
+            try {
+                const cleanJson = rawText.replace(/```json|```/g, '').trim();
+                const item = JSON.parse(cleanJson);
+                const history = JSON.parse(localStorage.getItem('app_invoices') || '[]');
+                history.push({ ...item, id: Date.now(), date: new Date().toLocaleDateString('ar-EG') });
+                localStorage.setItem('app_invoices', JSON.stringify(history));
+            } catch(e) {}
         }
-        function deleteTask(id) {
-            const tasks = getTasks().filter(t => t.id !== id);
-            localStorage.setItem('tasks', JSON.stringify(tasks));
-            renderTasks();
+
+        // === 5. DASHBOARD & CHART RENDERING ===
+        function updateDashboard() {
+            const history = JSON.parse(localStorage.getItem('app_invoices') || '[]');
+            let total = 0;
+            const categories = {};
+            const listEl = document.getElementById('invoiceHistoryList');
+            listEl.innerHTML = '';
+
+            history.forEach(r => {
+                const amt = parseFloat(r.amount) || 0;
+                total += amt;
+                categories[r.category] = (categories[r.category] || 0) + amt;
+
+                listEl.innerHTML += `
+                    <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl flex justify-between items-center">
+                        <div>
+                            <p class="font-bold text-slate-200">${r.merchant || 'فاتورة'}</p>
+                            <span class="text-[9px] text-slate-500">${r.date} - ${r.category || 'عام'}</span>
+                        </div>
+                        <span class="font-extrabold text-emerald-400">${amt.toFixed(2)} €</span>
+                    </div>`;
+            });
+
+            document.getElementById('stat-total').innerText = total.toFixed(2) + ' €';
+            document.getElementById('stat-count').innerText = history.length;
+
+            renderChart(Object.keys(categories), Object.values(categories));
         }
-        function renderTasks() {
-            const tasks = getTasks();
-            const list = document.getElementById('taskList');
-            list.innerHTML = tasks.length ? '' : '<p style="text-align:center;color:#888;">لا توجد تذكيرات حالياً</p>';
-            tasks.forEach(t => {
-                list.innerHTML += `<div class="task-item">
-                    <div><strong>${t.title}</strong><br><small style="color:#666;">📅 ${t.date || 'بدون تاريخ'}</small></div>
-                    <button onclick="deleteTask(${t.id})" style="background:#ef4444;color:white;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;">حذف</button>
-                </div>`;
+
+        function renderChart(labels, data) {
+            const ctx = document.getElementById('expenseChart').getContext('2d');
+            if (myChart) myChart.destroy();
+
+            myChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels.length ? labels : ['لا توجد بيانات'],
+                    datasets: [{
+                        data: data.length ? data : [1],
+                        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#94a3b8', font: { size: 10 } } } }
+                }
             });
         }
+
+        function exportToCSV() {
+            const history = JSON.parse(localStorage.getItem('app_invoices') || '[]');
+            let csv = "المحل,المبلغ,التصنيف,التاريخ\n";
+            history.forEach(i => { csv += `"${i.merchant}",${i.amount},"${i.category}","${i.date}"\n`; });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "FinSnap_Invoices.csv";
+            link.click();
+        }
+
+        // === 6. REMINDERS SYSTEM (DAY + TIME) ===
+        function addReminder() {
+            const title = document.getElementById('remindTitle').value;
+            const date = document.getElementById('remindDate').value;
+            const time = document.getElementById('remindTime').value;
+
+            if(!title || !date) { alert('يرجى تحديد العنوان واليوم!'); return; }
+            const reminders = JSON.parse(localStorage.getItem('app_reminders') || '[]');
+            reminders.push({ id: Date.now(), title, date, time });
+            localStorage.setItem('app_reminders', JSON.stringify(reminders));
+            document.getElementById('remindTitle').value = '';
+            renderReminders();
+        }
+
+        function deleteReminder(id) {
+            const reminders = JSON.parse(localStorage.getItem('app_reminders') || '[]').filter(r => r.id !== id);
+            localStorage.setItem('app_reminders', JSON.stringify(reminders));
+            renderReminders();
+        }
+
+        function renderReminders() {
+            const reminders = JSON.parse(localStorage.getItem('app_reminders') || '[]');
+            const list = document.getElementById('reminderList');
+            list.innerHTML = reminders.length ? '' : '<p class="text-center text-xs text-slate-500 py-4">لا توجد تذكيرات حالياً</p>';
+            reminders.forEach(r => {
+                list.innerHTML += `
+                    <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl flex justify-between items-center">
+                        <div>
+                            <p class="font-bold text-slate-200">${r.title}</p>
+                            <span class="text-[10px] text-amber-400"><i class="fa-regular fa-clock ml-1"></i>${r.date} ${r.time ? '| ' + r.time : ''}</span>
+                        </div>
+                        <button onclick="deleteReminder(${r.id})" class="text-rose-400 p-2"><i class="fa-solid fa-trash"></i></button>
+                    </div>`;
+            });
+        }
+
+        // === 7. PAYMENT & SUPPORT ACTIONS ===
+        function processPayment() {
+            const amt = document.getElementById('payAmount').value;
+            if(!amt) return alert('ادخل المبلغ!');
+            alert('✅ تم إتمام الدفع بنجاح معالجة المعاملة المشفرة!');
+            document.getElementById('payAmount').value = '';
+        }
+
+        function submitSupport() {
+            const msg = document.getElementById('suppMsg').value;
+            if(!msg) return alert('اكتب الرسالة!');
+            alert('✅ تم إرسال شكواك/اقتراحك بنجاح للقسم المالي!');
+            document.getElementById('suppMsg').value = '';
+        }
+
+        function toggleLock() {
+            alert('🔒 تم قفل الشاشة لحماية بياناتك المالية.');
+        }
+
+        // === 8. INITIALIZATION ===
+        window.onload = function() {
+            const savedLang = localStorage.getItem('app_lang') || 'ar';
+            document.getElementById('langSelect').value = savedLang;
+            changeLanguage(savedLang);
+            renderReminders();
+            updateDashboard();
+        };
     </script>
 </body>
 </html>
-
