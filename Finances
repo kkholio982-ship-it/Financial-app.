@@ -1,16 +1,1 @@
-{
-  "name": "المساعد المالي والإداري",
-  "short_name": "المساعد المالي",
-  "start_url": "/index.html",
-  "display": "standalone",
-  "background_color": "#f0f4f8",
-  "theme_color": "#1e88e5",
-  "icons": [
-    {
-      "src": "https://cdn-icons-png.flaticon.com/512/2382/2382461.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ]
-}
+
