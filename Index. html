@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المساعد المالي والإداري</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; background: #f0f4f8; margin: 0; padding: 15px; color: #333; }
+        .card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); max-width: 480px; margin: 0 auto 15px; }
+        h2 { color: #1e88e5; margin-top: 0; text-align: center; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { flex: 1; padding: 12px; border: none; background: #e2e8f0; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .tab-btn.active { background: #1e88e5; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .input-group { margin-bottom: 12px; }
+        label { font-size: 12px; font-weight: bold; display: block; margin-bottom: 4px; }
+        .input-field { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
+        .btn { width: 100%; padding: 14px; background: #1e88e5; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .result { background: #0f172a; color: #38bdf8; padding: 15px; border-radius: 10px; font-size: 14px; white-space: pre-wrap; margin-top: 12px; }
+        .task-item { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 8px; border-right: 4px solid #1e88e5; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>📱 المساعد الذكي الشامل</h2>
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('ai')">🧾 الفواتير</button>
+            <button class="tab-btn" onclick="switchTab('tasks')">📋 المهام والتذكيرات</button>
+        </div>
+
+        <!-- قسم الذكاء الاصطناعي -->
+        <div id="aiTab" class="tab-content active">
+            <div class="input-group">
+                <label>مفتاح Gemini API:</label>
+                <input type="text" id="apiKeyInput" class="input-field" placeholder="ضع المفتاح AQ... هنا">
+            </div>
+            <div class="input-group">
+                <label>صورة الفاتورة:</label>
+                <input type="file" id="receiptInput" accept="image/*" class="input-field">
+            </div>
+            <button class="btn" onclick="uploadReceipt()">تحليل بالذكاء الاصطناعي 🚀</button>
+            <div id="status" style="margin-top:10px; font-size:13px; font-weight:bold;"></div>
+            <div id="result" class="result" style="display:none;"></div>
+        </div>
+
+        <!-- قسم المهام والتذكيرات -->
+        <div id="tasksTab" class="tab-content">
+            <div class="input-group">
+                <label>عنوان المهمة / التذكير:</label>
+                <input type="text" id="taskTitle" class="input-field" placeholder="مثال: سداد فاتورة الكهرباء">
+            </div>
+            <div class="input-group">
+                <label>تاريخ التذكير:</label>
+                <input type="date" id="taskDate" class="input-field">
+            </div>
+            <button class="btn" style="background:#22c55e;" onclick="addTask()">إضافة التذكير 🔔</button>
+            <div id="taskList" style="margin-top:20px;"></div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            if(tab === 'ai') {
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+                document.getElementById('aiTab').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                document.getElementById('tasksTab').classList.add('active');
+            }
+        }
+
+        window.onload = function() {
+            const k = localStorage.getItem('gemini_key');
+            if(k) document.getElementById('apiKeyInput').value = k;
+            renderTasks();
+        };
+
+        async function uploadReceipt() {
+            const file = document.getElementById('receiptInput').files[0];
+            const key = document.getElementById('apiKeyInput').value.trim();
+            const status = document.getElementById('status');
+            const result = document.getElementById('result');
+
+            if(!key || !file) { alert('ادخل المفتاح والصورة أولاً!'); return; }
+            localStorage.setItem('gemini_key', key);
+            status.innerText = "⏳ جاري تحليل الفاتورة...";
+            result.style.display = "none";
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const b64 = e.target.result.split(',')[1];
+                const models = ["gemini-3.6-flash", "gemini-1.5-flash", "gemini-2.0-flash"];
+                let ok = false;
+
+                for(let model of models) {
+                    try {
+                        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+                            body: JSON.stringify({ contents: [{ parts: [
+                                { text: "أنت مساعد مالي. استخرج باللغة العربية: اسم المكان، التاريخ، المبلغ الإجمالي، الضريبة، والتصنيف." },
+                                { inline_data: { mime_type: file.type || "image/jpeg", data: b64 } }
+                            ]}]})
+                        });
+                        const data = await res.json();
+                        if(res.ok && data.candidates) {
+                            status.innerText = "✅ تم التحليل بنجاح!";
+                            result.style.display = "block";
+                            result.innerText = data.candidates[0].content.parts[0].text;
+                            ok = true; break;
+                        }
+                    } catch(err) {}
+                }
+                if(!ok) status.innerText = "❌ تعذر التحليل، تأكد من المفتاح والصورة.";
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function getTasks() { return JSON.parse(localStorage.getItem('tasks') || '[]'); }
+        function addTask() {
+            const title = document.getElementById('taskTitle').value;
+            const date = document.getElementById('taskDate').value;
+            if(!title) return;
+            const tasks = getTasks();
+            tasks.push({ id: Date.now(), title, date });
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            document.getElementById('taskTitle').value = '';
+            renderTasks();
+        }
+        function deleteTask(id) {
+            const tasks = getTasks().filter(t => t.id !== id);
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            renderTasks();
+        }
+        function renderTasks() {
+            const tasks = getTasks();
+            const list = document.getElementById('taskList');
+            list.innerHTML = tasks.length ? '' : '<p style="text-align:center;color:#888;">لا توجد تذكيرات حالياً</p>';
+            tasks.forEach(t => {
+                list.innerHTML += `<div class="task-item">
+                    <div><strong>${t.title}</strong><br><small style="color:#666;">📅 ${t.date || 'بدون تاريخ'}</small></div>
+                    <button onclick="deleteTask(${t.id})" style="background:#ef4444;color:white;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;">حذف</button>
+                </div>`;
+            });
+        }
+    </script>
+</body>
+</html>
+
